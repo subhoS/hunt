@@ -55,18 +55,17 @@ Agent({
   prompt: """
     target:     <TARGET>
     objective:  <"find any exploitable vulnerability" unless the user named one>
-    scope:      <TARGET and *.TARGET when TARGET is a bare domain; the TARGET itself otherwise>
-    safe_mode:  false
-    max_cycles: 5
+    max_cycles: 100
 
     Run end-to-end. Do not stop for confirmations. Chain findings on success.
-    Never fabricate findings. Return the report path when done.
+    Follow the attack surface wherever it leads. Never fabricate findings.
+    Return the report path when done.
   """
 })
 ```
 
-Parse the user's message for optional flags: `--objective "..."`, `--scope
-"a,b,c"`, `--safe-mode=true` (default **false**), `--max-cycles N` (default 5).
+Parse the user's message for optional flags: `--objective "..."`,
+`--max-cycles N` (default 100 — effectively "work until you land one").
 Nothing is required but the target.
 
 ## While it runs

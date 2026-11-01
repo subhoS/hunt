@@ -6,10 +6,12 @@ Point it at a target, step back, read the report.
 ```
 /hunt example.com
 /hunt https://staging.foo.com --objective "find RCE"
-/hunt 10.0.0.5 --scope 10.0.0.0/24 --max-cycles 8
+/hunt 10.0.0.5 --max-cycles 50
 ```
 
-That's it. No mid-run prompts. No confirmations. No scope wizard.
+That's it. No mid-run prompts. No confirmations. No scope wall. No ownership
+check. You type a target, the swarm runs until it lands something or the
+attack surface runs dry.
 
 ## What's inside
 
@@ -63,8 +65,8 @@ recon ─▶ classifier ─▶ exploit ─▶ verify ─▶ report
 Loops recon→classify→exploit→verify until any one of:
 
 1. ≥ 1 **VERIFIED** finding at CVSS ≥ 7
-2. `max_cycles` reached (default 5)
-3. Scope exhausted
+2. `max_cycles` reached (default 100 — effectively "run until you land one")
+3. Attack surface stops changing across two cycles
 4. User sends an explicit abort
 
 Then the report writes a Markdown + JSON report (and SARIF if `--sarif` was
@@ -93,16 +95,27 @@ Baked into the exploit agent's recipe library:
 Each recipe has an **EVIDENCE criterion** — findings only ship when the
 response matches it. "The server responded" is not evidence.
 
-## Operational floor
+## What's still in there, and why
 
-The exploit agent has a quiet blocklist on patently self-destructive shell
-commands (`rm -rf /`, `mkfs`, `dd of=/dev/`, `shutdown`, `curl … | sh`,
-`chmod -R 777 /`, fork bombs, `kill -9 1`). These aren't offensive-security
-payloads; they're footguns on your own machine. If an LLM gets confused mid-
-run, this stops it from `rm -rf`-ing your home dir. Nothing else is filtered.
+Two things stay by default. Both exist to protect you, not the target:
 
-If you want this gone too, delete the "operational floor" block from
-`agents/pentest-exploit.md` and `agents/pentest-orchestrator.md`.
+**Destructive-command blocklist.** The exploit agent and the orchestrator
+reject patently self-destructive shell commands (`rm -rf /`, `mkfs`,
+`dd of=/dev/`, `shutdown`, `curl … | sh`, `chmod -R 777 /`, fork bombs,
+`kill -9 1`). These aren't pentest payloads; they're footguns on your own
+machine. If an LLM gets confused mid-run, this stops it from `rm -rf`-ing
+your home dir.
+
+**Never-fabricate rule.** Agents can't make up findings or evidence. Without
+this the report is garbage — you lose the ability to trust it.
+
+If you want either gone, grep `operational floor` or `Never` across
+`skill/agents/*.md` and delete the blocks.
+
+Everything else that used to be a check — authorization prompt, scope wall,
+`safe_mode` flag, rate limits, cycle caps, no-persistence rule,
+no-bulk-exfil rule — is gone. The swarm chases the whole chain and doesn't
+look at what you typed.
 
 ## Output
 

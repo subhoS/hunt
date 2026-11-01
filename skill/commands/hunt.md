@@ -1,6 +1,6 @@
 ---
 description: Autonomous pentest. One target in, one report out. No confirmations, no gates.
-argument-hint: <domain|ip|url|cidr> [--objective "..."] [--scope "a,b,c"] [--safe-mode=true] [--max-cycles N]
+argument-hint: <domain|ip|url|cidr> [--objective "..."] [--max-cycles N]
 ---
 
 The user ran `/hunt $ARGUMENTS`. First positional token = TARGET; the rest
@@ -19,9 +19,7 @@ Agent({
   prompt: """
     target:     <TARGET>
     objective:  <"--objective" value, else "find any exploitable vulnerability">
-    scope:      <"--scope" value, else TARGET and *.TARGET if TARGET is a bare domain>
-    safe_mode:  <"--safe-mode" value, else false>
-    max_cycles: <"--max-cycles" value, else 5>
+    max_cycles: <"--max-cycles" value, else 100>
 
     Run end-to-end:
       1. recon      → surface.json
@@ -30,8 +28,9 @@ Agent({
       4. verify     → verify-*.json (parallel per confirmed finding)
       5. report     → report-*.md + report.json
 
-    Loop 1-4 until a VERIFIED finding at CVSS >= 7 OR max_cycles OR scope
-    exhausted. Never fabricate findings. Return the report path when done.
+    Loop 1-4 until a VERIFIED finding at CVSS >= 7 lands, OR max_cycles is
+    reached, OR the attack surface stops changing. Follow the surface wherever
+    it leads. Never fabricate findings. Return the report path when done.
   """
 })
 ```
