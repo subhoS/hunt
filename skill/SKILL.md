@@ -87,9 +87,55 @@ Everything lives under this skill directory:
 - `agents/pentest-orchestrator.md` — top-level ReAct driver
 - `agents/pentest-recon.md` — attack-surface mapping
 - `agents/pentest-classifier.md` — CVE/CVSS/severity scoring
-- `agents/pentest-exploit.md` — attack chains + evidence capture
+- `agents/pentest-exploit.md` — single-threaded attack chains + evidence (Mode A)
+- `agents/pentest-auth-session.md` — A6: auth, session, JWT, OAuth, 2FA, reset
+- `agents/pentest-access-idor.md` — A6: IDOR, mass assignment, tenant isolation, GraphQL authz
+- `agents/pentest-injection.md` — A6: SQLi / NoSQLi / SSTI / cmdi / XXE / LDAP / header / proto-pollution
+- `agents/pentest-business-logic.md` — A6: workflow, state, pricing, discounts, idempotency gaps
+- `agents/pentest-ssrf-cloud.md` — A6: SSRF, open redirect, URL schemes, cloud metadata, webhook abuse
+- `agents/pentest-race-toctou.md` — A6: parallel-request abuse, double-spend, TOCTOU
 - `agents/pentest-verify.md` — independent oracle re-run
 - `agents/pentest-report.md` — Markdown + JSON report generation
+- `templates/authorization-briefing.md` — scope + RoE template rendered per campaign
+- `references/attack-conventions.md` — guard-reporter + pause-and-ask + evidence protocol
+- `tools/log_guard.sh` — append structured guard observation to `guards.jsonl`
+- `tools/open_block.sh` — open a human-review block under `blocks/`
 - `commands/hunt.md` — `/hunt` slash command entrypoint
 
-Install with `install.sh` or copy the contents into `~/.claude/skills/hunt/`.
+Install with `install.sh` (copies the skill tree AND wires every agent
+into `~/.claude/agents/`), then restart Claude Code.
+
+## Exploit modes
+
+The orchestrator picks per campaign based on classified findings:
+
+- **Mode A** (small surface): single `pentest-exploit`, same as before.
+- **Mode A6** (≥ 3 classes AND ≥ 6 findings): six specialists in parallel,
+  each on their class bucket. Classes map to specialists via
+  `agents/pentest-orchestrator.md` → "Attack-class → specialist mapping".
+
+Each specialist is a leaf (no further Agent spawning), pinned to Opus
+4.7, bound to the same RoE through the authorization briefing.
+
+## Guard reporter and pause-and-ask
+
+The swarm does NOT auto-bypass defenses. When a specialist's probe hits
+a WAF, rate limit, auth wall, captcha, account lock, scope boundary, or
+the harness's own classifier, it writes a structured entry to
+`<out_dir>/guards.jsonl` via `tools/log_guard.sh` and moves on. When a
+specialist needs to do something it cannot do inside RoE, it opens a
+block via `tools/open_block.sh` under `<out_dir>/blocks/` and marks the
+finding `blocked_need_human: true`. The orchestrator surfaces every open
+block at the phase boundary and asks the user how to proceed. Blocks are
+never auto-resolved. Full protocol: `references/attack-conventions.md`.
+
+## Authorization briefing
+
+The invoker (slash command / user prompt / orchestrator caller) supplies
+scope + RoE + legal basis. The orchestrator renders
+`<out_dir>/authorization-briefing.md` from
+`templates/authorization-briefing.md` and that file is read FIRST by
+every specialist. It is also the context Claude Code's harness classifier
+needs to clear a "third-party attack" check on each spawn. If the
+briefing cannot be filled, the orchestrator does not spawn; it writes a
+block and surfaces to the user.
