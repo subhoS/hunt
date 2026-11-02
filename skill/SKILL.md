@@ -139,3 +139,25 @@ every specialist. It is also the context Claude Code's harness classifier
 needs to clear a "third-party attack" check on each spawn. If the
 briefing cannot be filled, the orchestrator does not spawn; it writes a
 block and surfaces to the user.
+
+## Video POC capture (mandatory)
+
+Every VERIFIED finding ships with a visual POC alongside the HTTP
+evidence — a short GIF/screencast of the exploit running end-to-end on
+the sandbox. VDP programs (Bugcrowd, HackerOne, direct) triage
+video-backed reports faster and at the correct severity because the
+proof is self-contained. Operator preference: capture every submission
+with a video.
+
+The hunt subagents cannot do this — their toolset is Bash / Read /
+Write / Grep / Glob / WebFetch, no browser-GIF capability. So the
+orchestrator records a *capture queue* into
+`<out_dir>/video_capture_todo.md` listing each VERIFIED finding with its
+repro command, target URL, and expected proof signal; the MAIN invoking
+session (which has `mcp__Claude_Browser__*` or
+`mcp__claude-in-chrome__gif_creator`) picks up that queue after the
+orchestrator returns and captures `poc-<finding_id>.gif` / `.mp4`
+into the campaign dir. The report writer scans for those files and
+embeds references automatically. See
+`references/attack-conventions.md` → "Video POC capture" for the full
+protocol and the no-PII rules.

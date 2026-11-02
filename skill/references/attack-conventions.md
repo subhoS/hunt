@@ -118,3 +118,48 @@ can I pull."
 
 The orchestrator merges these into `execution_results.json` before
 spawning the verifier.
+
+## 6. Video POC capture
+
+Every VERIFIED finding ships with a short video or GIF alongside the
+HTTP evidence. VDP triagers prioritize visually-proven reports; the
+operator preference is to submit video with every finding.
+
+**Who records.** The attack specialists CANNOT record — their toolset
+is Bash / Read / Write / Grep / Glob / WebFetch. Specialists write a
+clean, deterministic `evidence.repro` command for every success, so the
+recording can be driven from it later. The orchestrator writes
+`<out_dir>/video_capture_todo.md` after verify. The MAIN invoking
+session (which has `mcp__Claude_Browser__*` or
+`mcp__claude-in-chrome__gif_creator`) picks up that queue and captures
+each `poc-<finding_id>.gif` into the campaign dir.
+
+**What a specialist must do** to make the capture possible:
+- `evidence.repro` is a single copy-pasteable command (curl, python, or
+  "open <url>, click X, submit Y"). Not multi-step prose. Not an
+  implicit tenant swap. If credentials or tokens vary, bake them in as
+  shell variables the main session can set from `tenants.json`.
+- `evidence.response_body_excerpt` names the exact proof signal the
+  recording must show (e.g., `"sub":1993,"businessId":10008` → the JWT
+  claim is what the video has to capture).
+- If the finding is API-only, note `ui_reachable: false` in the
+  specialist's result; the main session will record a terminal
+  screencast of the curl.
+- If the finding is UI-reachable, note `ui_reachable: true` and the
+  entry URL + the UI steps (3–5 bullets) that trigger the exploit.
+
+**Rules on recording** (enforced by the main session, documented here
+so specialists write capture-ready reproducs):
+- Only self-registered test tenants on screen. Never real customer data.
+- Scrub bearer tokens before saving (black-box overlay or truncate
+  recording before the full token appears). Specialists should not log
+  more of a token than needed to prove the issue.
+- 10–30 second clips. Longer than 60s almost never justified.
+- Show: setup frame → attacker action → server response proving impact.
+- No typing of passwords or secrets on camera.
+
+**Missing capture.** When the main session cannot record (browser tools
+unavailable, finding not visually reproducible), the finding writeup
+says `*POC video: not captured — <reason>*` and the entry stays in
+`video_capture_todo.md` for the operator to film manually before
+submission. Never silently omit.
