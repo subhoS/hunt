@@ -31,4 +31,4 @@ echo "Agents and the /hunt slash command are now available in Claude Code."
 echo "Restart Claude Code (or start a new session) so the new subagents are picked up."
 echo "Try:  /hunt example.com"
 echo
-echo "Models: Opus 4.7 for every offensive agent, Sonnet 5.5 for the report writer."
+echo "Models: Opus 4.7 for every offensive agent, Fable 5.1 for the report writer + POC curation."
