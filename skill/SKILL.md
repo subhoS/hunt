@@ -32,19 +32,29 @@ You do NOT run the attack yourself. You hand off and surface the report.
 ## Model pinning (non-negotiable)
 
 Every offensive agent runs on **Opus 4.7** (`claude-opus-4-7`). The report
-writer runs on Sonnet 5.5 to save tokens on the long narrative — nothing else
-should ever use a non-Opus model.
+writer runs on **Fable 5.1** (`claude-fable-5-1`) — a tier upgrade from Sonnet,
+chosen because reports go to human VDP triagers and the prose has to read like
+a professional analyst wrote it. Fable does NOT do exploitation; the Opus
+specialists have already landed the technical facts, Fable just transforms
+them into the narrative + curates the POC-video references.
 
-| Agent | Model |
-|---|---|
-| pentest-orchestrator | claude-opus-4-7 |
-| pentest-recon | claude-opus-4-7 |
-| pentest-classifier | claude-opus-4-7 |
-| pentest-exploit | claude-opus-4-7 |
-| pentest-verify | claude-opus-4-7 |
-| pentest-report | claude-sonnet-5-5 |
+| Agent | Model | Role |
+|---|---|---|
+| pentest-orchestrator | claude-opus-4-7 | drive the campaign |
+| pentest-recon | claude-opus-4-7 | map surface |
+| pentest-classifier | claude-opus-4-7 | score + prioritize |
+| pentest-exploit | claude-opus-4-7 | land exploits (Mode A) |
+| pentest-auth-session / access-idor / injection / business-logic / ssrf-cloud / race-toctou | claude-opus-4-7 | A6 attack class specialists |
+| pentest-verify | claude-opus-4-7 | independent oracle |
+| pentest-report | **claude-fable-5-1** | human-grade report prose + POC curation |
 
-The frontmatter on each agent file already carries this. Do not override.
+The frontmatter on each agent file carries this. The operator may override
+`pentest-report` to `claude-opus-5-5` for maximum factual precision on heavy-
+technical campaigns (API-heavy, deep business-logic chains); default stays
+Fable 5.1 for prose quality. **The POC-capture phase in the main invoking
+session should also run on the operator's highest-available tier (Opus 5.5
+or Fable 5.1)** — capture work involves driving a browser and composing POC
+narratives, both of which benefit from top-tier reasoning + writing.
 
 ## Call shape
 
